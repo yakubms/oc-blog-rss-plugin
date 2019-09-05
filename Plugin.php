@@ -37,18 +37,18 @@ class Plugin extends PluginBase
     public function boot()
     {
         // Event Listeners for RainLab Blog
-        Event::listen('eloquent.created: RainLab\Blog\Models\Post', function($model) {
+        Event::listen('eloquent.created: RainLab\Blog\Models\Post', function ($model) {
             $this->createRss();
         });
-        Event::listen('eloquent.saved: RainLab\Blog\Models\Post', function($model) {
+        Event::listen('eloquent.saved: RainLab\Blog\Models\Post', function ($model) {
             $this->createRss();
         });
-        Event::listen('eloquent.deleted: RainLab\Blog\Models\Post', function($model) {
+        Event::listen('eloquent.deleted: RainLab\Blog\Models\Post', function ($model) {
             $this->createRss();
         });
 
         // Event Listeners for SoBoRed settings
-        Event::listen('eloquent.saved: SoBoRed\Rss\Models\Settings', function($model) {
+        Event::listen('eloquent.saved: SoBoRed\Rss\Models\Settings', function ($model) {
             $this->createRss();
         });
     }
@@ -77,8 +77,7 @@ class Plugin extends PluginBase
                         "\t\t<description>" . Settings::get('description') . "</description>\n".
                         "\t\t<atom:link href=\"" . Settings::get('link') . "/rss.xml\" rel=\"self\" type=\"application/rss+xml\" />\n\n";
 
-        foreach($this->loadPosts() as $post)
-        {
+        foreach ($this->loadPosts() as $post) {
             $published = DateTime::createFromFormat('Y-m-d H:i:s', $post->published_at);
             $description = Settings::get('showFullPostContent') ? $post->content : $post->excerpt;
             $description = Markdown::parse(trim($description));
@@ -90,7 +89,6 @@ class Plugin extends PluginBase
                              "\t\t\t<pubDate>" . $published->format(DateTime::RFC2822) . "</pubDate>\n" .
                              "\t\t\t<description>" . htmlspecialchars($description, ENT_QUOTES, 'UTF-8') . "</description>\n" .
                              "\t\t</item>\n";
-
         }
 
         $fileContents .= "\t</channel>\n";
@@ -106,6 +104,7 @@ class Plugin extends PluginBase
         $posts = Db::table('rainlab_blog_posts')
                      ->orderBy('published_at', 'desc')
                      ->where('published', '=', '1')
+                     ->where('published_at', '<', now())
                      ->get();
 
         return $posts;
